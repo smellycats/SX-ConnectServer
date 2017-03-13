@@ -318,15 +318,18 @@ def device_get(ip):
 	logger.error(e)
 
 
-@app.route('/device_check', methods=['GET'])
+@app.route('/device_check/<int:num>', methods=['GET'])
 @limiter.limit('600/minute')
 #@limiter.exempt
 #@auth.login_required
-def device_check_get():
+def device_check_get(num):
     try:
         dev_list = db.session.query(Device).filter(
-            Device.modified <= arrow.now().replace(minutes=-1).datetime, Device.banned==0).order_by(Device.modified).limit(20).all()
+            Device.modified <= arrow.now().replace(minutes=-1).datetime,
+            Device.last_access <= arrow.now().replace(minutes=-1).datetime,
+            Device.banned==0).order_by(Device.modified).limit(num).all()
         items = []
+        t = datetime.datetime.now()
         for i in dev_list:
             item = {}
             item['id'] = i.id
@@ -337,9 +340,12 @@ def device_check_get():
             item['status'] = i.status
             item['ps'] = i.ps
             items.append(item)
+            i.last_access = t
+        db.session.commit()
         
 	return jsonify({'total_count': len(items), 'items': items}), 200
     except Exception as e:
+        print e
 	logger.error(e)
 
 
@@ -360,7 +366,7 @@ def device_post():
                     dev.status = 1
                 else:
                     dev.status = 0
-                db.session.commit()
+        db.session.commit()
         
 	return jsonify({'total': len(request.json['info'])}), 201
     except Exception as e:
