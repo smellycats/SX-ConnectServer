@@ -53,15 +53,18 @@ class Device(db.Model):
     type = db.Column(db.String(128), default='')
     application = db.Column(db.String(128), default='')
     modified = db.Column(db.DateTime)
+    last_access = db.Column(db.DateTime)
     status = db.Column(db.Integer, default=1)
     ps = db.Column(db.String(256), default='')
     banned = db.Column(db.Integer, default=0)
 
-    def __init__(self, ip, type, application, modified, status, ps, banned=0):
+    def __init__(self, ip, type, application, modified, last_access,
+                 status, ps, banned=0):
         self.ip = ip
         self.type = type
         self.application = application
         self.modified = modified
+        self.last_access = last_access
         self.status = status
         self.ps = ps
         self.banned = banned
